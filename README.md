@@ -1,1 +1,1 @@
-# patient-service
+# Patient Registration Service
