@@ -33,6 +33,18 @@ public class Patient {
     @Size(max = 100)
     private String address;
 
+    @ManyToOne
+    @JoinColumn(name="gp_id", nullable=false)
+    private GP gp;
+
+    public GP getGp() {
+        return gp;
+    }
+
+    public void setGp(GP gp) {
+        this.gp = gp;
+    }
+
     public String getAddress() {
         return address;
     }
