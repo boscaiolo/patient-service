@@ -67,6 +67,17 @@ public class PatientApplicationTest {
         verifySamplePatient(result, "");
     }
 
+    @Test
+    public void whenAPatientExistICanDeleteItByID() throws Exception {
+        Patient patient = createSamplePatient();
+
+        mvc.perform(get("/api/delete/" + patient.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        Assert.assertEquals(Optional.empty(), patientRepository.findById(patient.getId()));
+    }
+
     private void verifySamplePatient(ResultActions result, String offset) throws Exception {
         result.andExpect(jsonPath("$" + offset + ".name", Matchers.is("name")))
                 .andExpect(jsonPath("$" + offset + ".surName", Matchers.is("surname")))
