@@ -1,4 +1,6 @@
-package com.example.patients;
+package com.example.patients.domain;
+
+import com.example.patients.domain.GP;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -21,7 +23,6 @@ public class Patient {
     @Size(max = 100)
     private String surName;
 
-    @NotBlank(message = "Date of birth is mandatory")
     @Temporal(TemporalType.DATE)
     private Date dob;
 
@@ -34,7 +35,7 @@ public class Patient {
     private String address;
 
     @ManyToOne
-    @JoinColumn(name="gp_id", nullable=false)
+    @JoinColumn(name="gp_id")
     private GP gp;
 
     public GP getGp() {

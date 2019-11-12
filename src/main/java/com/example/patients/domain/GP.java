@@ -1,4 +1,4 @@
-package com.example.patients;
+package com.example.patients.domain;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
