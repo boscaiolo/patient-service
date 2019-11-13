@@ -1,11 +1,12 @@
 package com.example.patients;
 
+import com.example.patients.domain.GP;
 import com.example.patients.domain.Patient;
+import com.example.patients.repository.GPRepository;
 import com.example.patients.repository.PatientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +15,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -41,6 +40,9 @@ public class PatientApplicationTest {
 
     @Autowired
     private PatientRepository patientRepository;
+
+    @Autowired
+    private GPRepository gpRepository;
 
     @Test
     public void contextLoads() {
@@ -110,6 +112,31 @@ public class PatientApplicationTest {
                         .contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
         verifySamplePatient(result, "[0]");
+        patientRepository.deleteAll();
+    }
+
+    @Test
+    public void whenAPatientExistICanAssignItToexistingGP() throws Exception {
+        Patient patient = createSamplePatient();
+        patient = patientRepository.save(patient);
+
+        GP gp = new GP();
+        gp.setName("dr");
+        gp.setSurName("bob");
+        gpRepository.save(gp);
+
+        patient.setGp(gp);
+
+        mvc.perform(post("/api/save/" + patient.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(patient)))
+                .andExpect(status().isOk());
+
+
+        patient = patientRepository.findById(patient.getId()).get();
+        Assert.assertEquals("dr", patient.getGp().getName());
+        Assert.assertEquals("bob", patient.getGp().getSurName());
+
         patientRepository.deleteAll();
     }
 
