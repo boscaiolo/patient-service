@@ -18,8 +18,8 @@ public interface PatientService {
     @GetMapping("/{id}")
     Optional<Patient> get(@PathVariable long id);
 
-    @PostMapping("/save/{id}")
-    void save(@RequestBody @Valid Patient patient, @PathVariable long id);
+    @PostMapping(value = {"/save", "/save/{id}"})
+    void save(@RequestBody @Valid Patient patient, @PathVariable Optional<Long> id);
 
     @GetMapping("/delete/{id}")
     void delete(@PathVariable("id") long id);

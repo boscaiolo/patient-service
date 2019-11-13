@@ -2,6 +2,7 @@ package com.example.patients;
 
 import com.example.patients.domain.Patient;
 import com.example.patients.repository.PatientRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
@@ -30,6 +32,9 @@ public class PatientApplicationTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private PatientService patientService;
@@ -43,7 +48,7 @@ public class PatientApplicationTest {
 
     @Test
     public void whenAPatientExistFindReturnsMatchingSinglePatient() throws Exception {
-        createSamplePatient();
+        patientRepository.save(createSamplePatient());
 
         ResultActions result = mvc.perform(get("/api/")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -52,11 +57,14 @@ public class PatientApplicationTest {
                         .contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
         verifySamplePatient(result, "[0]");
+
+        patientRepository.deleteAll();
     }
 
     @Test
     public void whenAPatientExistICanRetrievItByID() throws Exception {
         Patient patient = createSamplePatient();
+        patient = patientRepository.save(patient);
 
         ResultActions result = mvc.perform(get("/api/" + patient.getId())
                 .contentType(MediaType.APPLICATION_JSON))
@@ -65,17 +73,64 @@ public class PatientApplicationTest {
                         .contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
         verifySamplePatient(result, "");
+        patientRepository.deleteAll();
     }
 
     @Test
     public void whenAPatientExistICanDeleteItByID() throws Exception {
         Patient patient = createSamplePatient();
+        patient = patientRepository.save(patient);
 
         mvc.perform(get("/api/delete/" + patient.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         Assert.assertEquals(Optional.empty(), patientRepository.findById(patient.getId()));
+    }
+
+    @Test
+    public void whenAPatientExistICanUpdateIt() throws Exception {
+        Patient patient = new Patient();
+        patient.setName("John");
+        patient.setSurName("Smith");
+        patient.setAddress("Dundee");
+        patient.setPhoneNumber("0000");
+
+        patient = patientRepository.save(patient);
+
+        mvc.perform(post("/api/save/" + patient.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createSamplePatient())))
+                .andExpect(status().isOk());
+
+        ResultActions result = mvc.perform(get("/api/")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        verifySamplePatient(result, "[0]");
+        patientRepository.deleteAll();
+    }
+
+    @Test
+    public void iCanCreateANewPatient() throws Exception {
+        Assert.assertFalse(patientRepository.findAll().iterator().hasNext());
+
+        Patient patient = createSamplePatient();
+
+        mvc.perform(post("/api/save/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(patient)))
+                .andExpect(status().isOk());
+
+        ResultActions result = mvc.perform(get("/api/")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        verifySamplePatient(result, "[0]");
     }
 
     private void verifySamplePatient(ResultActions result, String offset) throws Exception {
@@ -94,6 +149,6 @@ public class PatientApplicationTest {
         patient.setPhoneNumber("12345");
         patient.setDob(new Date(1573516800000L));
 
-        return patientRepository.save(patient);
+        return patient;
     }
 }

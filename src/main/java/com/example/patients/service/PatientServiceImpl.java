@@ -27,8 +27,11 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public void save(@Valid Patient patient, long id) {
-
+    public void save(@Valid Patient patient, Optional<Long> id) {
+        if (id.isPresent()){
+            patient.setId(id.get());
+        }
+        patientRepository.save(patient);
     }
 
     @Override
